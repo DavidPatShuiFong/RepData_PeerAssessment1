@@ -5,10 +5,73 @@ output:
     keep_md: true
 ---
 
+## Project
+
+This project was written by David Fong for a
+Reproducible Data (John Hopkins, Coursera) course assignment.
+
+## Introduction
+
+It is now possible to collect a large amount of data about personal
+movement using activity monitoring devices such as a
+[Fitbit](http://www.fitbit.com), [Nike
+Fuelband](http://www.nike.com/us/en_us/c/nikeplus-fuelband), or
+[Jawbone Up](https://jawbone.com/up). These type of devices are part of
+the "quantified self" movement -- a group of enthusiasts who take
+measurements about themselves regularly to improve their health, to
+find patterns in their behavior, or because they are tech geeks. But
+these data remain under-utilized both because the raw data are hard to
+obtain and there is a lack of statistical methods and software for
+processing and interpreting the data.
+
+This assignment makes use of data from a personal activity monitoring
+device. This device collects data at 5 minute intervals through out the
+day. The data consists of two months of data from an anonymous
+individual collected during the months of October and November, 2012
+and include the number of steps taken in 5 minute intervals each day.
 
 ## Loading and preprocessing the data
 
+The data for this assignment can be downloaded from the course web
+site:
 
+* Dataset: [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip) [52K]
+
+The variables included in this dataset are:
+
+* **steps**: Number of steps taking in a 5-minute interval (missing
+    values are coded as `NA`)
+
+* **date**: The date on which the measurement was taken in YYYY-MM-DD
+    format
+
+* **interval**: Identifier for the 5-minute interval in which
+    measurement was taken - read as a numeric
+
+The variables **date** and **interval** are converted into a single variable **time**
+
+
+``` {r}
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+### download data ZIP file if necessary, and extract if necessary
+if (!file.exists('activity.csv')) {
+  if (!file.exists('activitydata.zip')) {
+    if (download.file('https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip','activitydata.zip')) {
+      stop('Unable to download data file')
+    }
+  }
+  unzip('activitydata.zip')
+}
+
+### read activity data into 'step.data'
+step.data <- as.tibble(read.csv('activity.csv'))
+step.data$time <- as.POSIXlt(strptime(paste(step.data$date,sprintf('%04d',step.data$interval)),'%Y-%m-%d %H%M'))
+
+``` 
 
 ## What is mean total number of steps taken per day?
 
