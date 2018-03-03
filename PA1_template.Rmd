@@ -70,7 +70,7 @@ if (!file.exists('activity.csv')) {
 ### read activity data into 'step.data'
 step.data <- as.tibble(read.csv('activity.csv'))
 ### then convert the date/interval into a time variable
-step.data$time <- strptime(paste(step.data$date,sprintf('%04d',step.data$interval)),'%Y-%m-%d %H%M')
+step.data$time <- as.POSIXct(strptime(paste(step.data$date,sprintf('%04d',step.data$interval)),'%Y-%m-%d %H%M'))
 
 ``` 
 
