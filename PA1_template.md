@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Project
 
@@ -51,8 +46,8 @@ The variables included in this dataset are:
 The variables **date** and **interval** are converted into a single variable **time**
 
 
-``` {r results='hide', message=FALSE, warning=FALSE}
 
+```r
 ### start necessary libraries
 library(tidyverse)
 library(dplyr)
@@ -60,11 +55,10 @@ library(ggplot2)
 
 ### set figure save path to figure/
 knitr::opts_chunk$set(fig.path = 'figure/')
-
-
 ```
 
-``` {r}
+
+```r
 ### download data ZIP file if necessary, and extract if necessary
 if (!file.exists('activity.csv')) {
   if (!file.exists('activitydata.zip')) {
@@ -79,13 +73,12 @@ if (!file.exists('activity.csv')) {
 step.data <- as.tibble(read.csv('activity.csv'))
 ### then convert the date/interval into a time variable
 step.data$time <- as.POSIXct(strptime(paste(step.data$date,sprintf('%04d',step.data$interval)),'%Y-%m-%d %H%M'))
-
-``` 
+```
 
 ## What is the mean total number of steps taken per day?
 
-``` {r}
 
+```r
 ### calculate the total number of steps taken on each day of recording
 daily.steps <- step.data %>%
   group_by(as.Date(time)) %>%
@@ -99,19 +92,19 @@ ggplot(daily.steps, aes(daily.steps$steps)) +
   geom_vline(aes(xintercept = median(daily.steps$steps), color = 'Median'), linetype = 'dashed', size = 1) +
   scale_color_manual(name = 'Moments', values = c(Median = 'blue', Mean = 'red')) + 
   theme(legend.position = c(0.9,0.7))
-  
-
 ```
 
-Mean number of steps daily = `r sprintf('%6.1f',mean(daily.steps$steps))`
+![](figure/unnamed-chunk-3-1.png)<!-- -->
 
-Median number of steps daily = `r median(daily.steps$steps)`
+Mean number of steps daily = 9203.4
+
+Median number of steps daily = 8978.5
 
 ## What is the average daily activity pattern?
 
 
-``` {r}
 
+```r
 ### calculate the average (mean) number of steps in each 5-minute period across all days
 interval.steps <- step.data %>%
   mutate(interval = as.POSIXct(format(time, format='%H:%M:%S'), format = '%H:%M:%S')) %>%
@@ -134,11 +127,12 @@ ggplot(interval.steps, aes(x = interval, y = steps)) +
                  linetype = 'dashed', size = 1) +
   scale_color_manual(name = 'Maximum', labels = c('206 steps', '08:35'), values = c('red', 'blue')) +
   theme(legend.position = c(0.9,0.8))
-
 ```
 
+![](figure/unnamed-chunk-4-1.png)<!-- -->
+
 The 5-minute interval, calculated average across all days, with the maximum number of average steps:
-`r strftime(interval.step.max.period,'%H:%M')`
+08:35
 
 ## Imputing missing values
 
@@ -146,16 +140,17 @@ There are a number of days/intervals where there are missing
 values (coded as `NA`). The presence of missing days may introduce
 bias into some calculations or summaries of the data.
 
-``` {r}
+
+```r
 ### Calculate and report the total number of missing values in the dataset
 
 number.of.na <- sum(is.na(step.data$steps))
-
 ```
 
-There are `r number.of.na` recordings with missing values.
+There are 2304 recordings with missing values.
 
-``` {r}
+
+```r
 ### match rows in steps.data which have steps == 'NA' with corresponding rows in interval.steps
 ### mach by interval (the time of the day)
 ### create column 'HM' in both step.data and interval.steps which is the string of the time in HHMM format
@@ -183,18 +178,19 @@ ggplot(daily.steps.filled, aes(daily.steps.filled$steps)) +
   geom_vline(aes(xintercept = median(daily.steps.filled$steps), color = 'Median'), linetype = 'dashed', size = 1) +
   scale_color_manual(name = 'Moments', values = c(Median = 'blue', Mean = 'red')) + 
   theme(legend.position = c(0.9,0.7))
-
 ```
 
-Mean number of steps daily = `r sprintf('%6.1f',mean(daily.steps.filled$steps))`, which is `r sprintf('%6.1f',mean(daily.steps.filled$steps)-mean(daily.steps$steps))` more than the mean number of steps calculated without using imputed values
+![](figure/unnamed-chunk-6-1.png)<!-- -->
 
-Median number of steps daily = `r median(daily.steps.filled$steps)`, which is `r median(daily.steps.filled$steps)-median(daily.steps$steps)` more than the median number of steps calculated without using imputed values
+Mean number of steps daily = 10592.5, which is 1389.2 more than the mean number of steps calculated without using imputed values
+
+Median number of steps daily = 9999, which is 1020.5 more than the median number of steps calculated without using imputed values
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-``` {r}
 
+```r
 ### create column 'weekpart' with value 'weekend' if data recorded on Saturday or Sunday.
 ### 'weekpart' has value 'weekday' if data recorded on Monday to Friday
 step.data.filled$weekpart <- ifelse(weekdays(step.data.filled$time) %in% c('Sunday','Saturday'),'weekend','weekday')
@@ -212,5 +208,6 @@ ggplot(interval.steps.filled, aes(x = interval, y = steps)) +
   labs(x = 'Time interval of day', y = 'Number of steps, averaged across all days') +
   scale_x_datetime(date_labels = '%H:%M') +
   facet_grid(weekpart~.)
-  
 ```
+
+![](figure/unnamed-chunk-7-1.png)<!-- -->
