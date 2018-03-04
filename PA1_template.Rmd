@@ -55,6 +55,7 @@ The variables **date** and **interval** are converted into a single variable **t
 
 library(tidyverse)
 library(dplyr)
+library(lubridate)
 library(ggplot2)
 
 ### download data ZIP file if necessary, and extract if necessary
@@ -79,14 +80,57 @@ step.data$time <- as.POSIXct(strptime(paste(step.data$date,sprintf('%04d',step.d
 ``` {r}
 
 daily.steps <- step.data %>%
-  group_by()
+  group_by(as.Date(time)) %>%
+  summarise(steps = sum(steps, na.rm = TRUE ))
 
+ggplot(daily.steps, aes(daily.steps$steps)) +
+  geom_histogram(binwidth = 2000) +
+  labs(title = "Total number of steps taken each day") +
+  labs(x = "Steps taken each day", y = "Count of number of days") + 
+  geom_vline(aes(xintercept = mean(daily.steps$steps), color = 'Mean'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = median(daily.steps$steps), color = 'Median'), linetype = 'dashed', size = 1) +
+  scale_color_manual(name = 'Moments', values = c(Median = 'blue', Mean = 'red')) + 
+  theme(legend.position = c(0.9,0.7))
   
+
 ```
+
+Mean number of steps daily = `r mean(daily.steps$steps)`
+
+Median number of steps daily = `r median(daily.steps$steps)`
 
 ## What is the average daily activity pattern?
 
 
+``` {r}
+
+### calculate the average (mean) number of steps in each 5-minute period across all days
+interval.steps <- step.data %>%
+  mutate(interval = as.POSIXct(format(time, format='%H:%M:%S'), format = '%H:%M:%S')) %>%
+  group_by(interval) %>%
+  summarise(steps = mean(steps, na.rm = TRUE))
+
+### find the maximum number of average steps in any 5-minute period, and find the period
+interval.step.max <- max(interval.steps$steps)
+interval.step.max.period <- interval.steps$interval[which.max(interval.steps$steps)]
+
+ggplot(interval.steps, aes(x = interval, y = steps)) +
+  geom_line() +
+  labs(title = 'Average daily activity pattern',
+       subtitle = 'Time series plot of the 5-minute interval and the number of steps') +
+  labs(x = 'Time interval of day', y = 'Number of steps, averaged across all days') +
+  scale_x_datetime(date_labels = '%H:%M') +
+  ### add lines to indicate time period of maximum number of average steps
+  geom_hline(aes(yintercept = max(interval.step.max), color = '206 steps'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = as.numeric(interval.step.max.period), color = '08:35'),
+                 linetype = 'dashed', size = 1) +
+  scale_color_manual(name = 'Maximum', labels = c('206 steps', '08:35'), values = c('red', 'blue')) +
+  theme(legend.position = c(0.9,0.8))
+
+```
+
+The 5-minute interval, on average across all days, containing the maximum number of steps:
+`r strftime(interval.step.max.period,'%H:%M')`
 
 ## Imputing missing values
 
