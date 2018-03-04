@@ -84,12 +84,15 @@ daily.steps <- step.data %>%
   group_by(as.Date(time)) %>%
   summarise(steps = sum(steps, na.rm = TRUE ))
 
+steps.mean <- mean(daily.steps$steps)
+steps.median <- median(daily.steps$steps)
+
 ggplot(daily.steps, aes(daily.steps$steps)) +
   geom_histogram(binwidth = 2000) +
   labs(title = "Total number of steps taken each day") +
   labs(x = "Steps taken each day", y = "Count of number of days") + 
-  geom_vline(aes(xintercept = mean(daily.steps$steps), color = 'Mean'), linetype = 'dashed', size = 1) +
-  geom_vline(aes(xintercept = median(daily.steps$steps), color = 'Median'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = steps.mean, color = 'Mean'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = steps.median, color = 'Median'), linetype = 'dashed', size = 1) +
   scale_color_manual(name = 'Moments', values = c(Median = 'blue', Mean = 'red')) + 
   theme(legend.position = c(0.9,0.7))
 ```
@@ -167,6 +170,9 @@ daily.steps.filled <- step.data.filled %>%
   group_by(as.Date(time)) %>%
   summarise(steps = sum(steps, na.rm = TRUE ))
 
+step.filled.mean <- mean(daily.steps.filled$steps)
+step.filled.median <- median(daily.steps.filled$steps)
+
 ggplot(daily.steps.filled, aes(daily.steps.filled$steps)) +
   geom_histogram(binwidth = 2000) +
   labs(title = "Total number of steps taken each day",
@@ -174,8 +180,8 @@ ggplot(daily.steps.filled, aes(daily.steps.filled$steps)) +
        Values imputed by using average (mean) of recordings\n
        for the same time period on other days') +
   labs(x = "Steps taken each day", y = "Count of number of days") + 
-  geom_vline(aes(xintercept = mean(daily.steps.filled$steps), color = 'Mean'), linetype = 'dashed', size = 1) +
-  geom_vline(aes(xintercept = median(daily.steps.filled$steps), color = 'Median'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = step.filled.mean, color = 'Mean'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = step.filled.median, color = 'Median'), linetype = 'dashed', size = 1) +
   scale_color_manual(name = 'Moments', values = c(Median = 'blue', Mean = 'red')) + 
   theme(legend.position = c(0.9,0.7))
 ```
