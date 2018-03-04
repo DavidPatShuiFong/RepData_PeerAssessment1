@@ -46,18 +46,21 @@ The variables included in this dataset are:
     format
 
 * **interval**: Identifier for the 5-minute interval in which
-    measurement was taken - read as a numeric
+    measurement was taken - read as a numeric, where '1355' means 13h:55m and '14:00' means 14h:00m 
 
 The variables **date** and **interval** are converted into a single variable **time**
 
 
-``` {r}
+``` {r results='hide', message=FALSE, warning=FALSE}
 
+### start necessary libraries
 library(tidyverse)
 library(dplyr)
-library(lubridate)
 library(ggplot2)
 
+```
+
+``` {r}
 ### download data ZIP file if necessary, and extract if necessary
 if (!file.exists('activity.csv')) {
   if (!file.exists('activitydata.zip')) {
@@ -79,6 +82,7 @@ step.data$time <- as.POSIXct(strptime(paste(step.data$date,sprintf('%04d',step.d
 
 ``` {r}
 
+### calculate the total number of steps taken on each day of recording
 daily.steps <- step.data %>%
   group_by(as.Date(time)) %>%
   summarise(steps = sum(steps, na.rm = TRUE ))
@@ -95,7 +99,7 @@ ggplot(daily.steps, aes(daily.steps$steps)) +
 
 ```
 
-Mean number of steps daily = `r mean(daily.steps$steps)`
+Mean number of steps daily = `r sprintf('%6.1f',mean(daily.steps$steps))`
 
 Median number of steps daily = `r median(daily.steps$steps)`
 
@@ -134,6 +138,53 @@ The 5-minute interval, on average across all days, containing the maximum number
 
 ## Imputing missing values
 
+There are a number of days/intervals where there are missing
+values (coded as `NA`). The presence of missing days may introduce
+bias into some calculations or summaries of the data.
+
+``` {r}
+### Calculate and report the total number of missing values in the dataset
+
+number.of.na <- sum(is.na(step.data$steps))
+
+```
+
+There are `r number.of.na` recordings with missing values.
+
+``` {r}
+### match rows in steps.data which have steps == 'NA' with corresponding rows in interval.steps
+### mach by interval (the time of the day)
+### create column 'HM' in both step.data and interval.steps which is the string of the time in HHMM format
+step.data$HM <- strftime(step.data$time,'%H%M')
+interval.steps$HM <- strftime(interval.steps$interval,'%H%M')
+
+### create new table step.data.filled with 'filled' data for 'NA' values for steps
+### fill in 'NA' values with already calculated average values for same 5-minute time period in interval.steps
+step.data.filled <- step.data
+step.data.filled$steps <- with(step.data.filled,ifelse(is.na(steps),interval.steps[match(HM,interval.steps$HM),]$steps,steps))
+
+### calculate the total number of steps taken on each day of recording
+daily.steps.filled <- step.data.filled %>%
+  group_by(as.Date(time)) %>%
+  summarise(steps = sum(steps, na.rm = TRUE ))
+
+ggplot(daily.steps.filled, aes(daily.steps.filled$steps)) +
+  geom_histogram(binwidth = 2000) +
+  labs(title = "Total number of steps taken each day",
+       subtitle = 'Using imputed values for time periods when no data was recorded\n
+       Values imputed by using average (mean) of recordings for the same time period on other days') +
+  labs(x = "Steps taken each day", y = "Count of number of days") + 
+  geom_vline(aes(xintercept = mean(daily.steps.filled$steps), color = 'Mean'), linetype = 'dashed', size = 1) +
+  geom_vline(aes(xintercept = median(daily.steps.filled$steps), color = 'Median'), linetype = 'dashed', size = 1) +
+  scale_color_manual(name = 'Moments', values = c(Median = 'blue', Mean = 'red')) + 
+  theme(legend.position = c(0.9,0.7))
+
+
+```
+
+Mean number of steps daily = `r sprintf('%6.1f',mean(daily.steps.filled$steps))`, which is `r sprintf('%6.1f',mean(daily.steps.filled$steps)-mean(daily.steps$steps))` more than the mean number of steps calculated without using imputed values
+
+Median number of steps daily = `r median(daily.steps.filled$steps)`, which is `r median(daily.steps.filled$steps)-median(daily.steps$steps)` more than the median number of steps calculated without using imputed values
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
